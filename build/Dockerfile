@@ -4,11 +4,16 @@ RUN apk add --no-cache \
     bash \
     bind-tools \
     iptables \
-    ip6tables \
+    iptables6 \
+    iproute2 \
+    curl \
     openvpn
 
-COPY . /usr/local/bin
+COPY --chmod=0755 entry.sh /usr/local/sbin/entry.sh
 
-ENV KILL_SWITCH=on
+WORKDIR /tmp
 
-ENTRYPOINT [ "entry.sh" ]
+ARG KILL_SWITCH=off
+ENV KILL_SWITCH=${KILL_SWITCH}
+
+ENTRYPOINT [ "/usr/local/sbin/entry.sh" ]
