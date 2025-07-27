@@ -10,10 +10,6 @@ cleanup() {
     exit 0
 }
 
-is_enabled() {
-    [[ ${1,,} =~ ^(true|t|yes|y|1|on|enable|enabled)$ ]]
-}
-
 create_dev_tun() { 
 # must be done at *run time* because /dev is mounted after container start. 
 # ie, commands are useless at build-time in Dockerfile
@@ -54,8 +50,9 @@ else
     echo "using openvpn configuration file: $config_file"
 fi
 
-if is_enabled "$KILL_SWITCH"; then
-    openvpn_args+=("--route-up" "/usr/local/bin/killswitch.sh ${ALLOWED_SUBNETS-}")
+if [[ ${UP_SCRIPT-} ]] ; then
+    openvpn_args+=("--route-up" "/usr/local/sbin/${UP_SCRIPT%%*/}")
+    openvpn_args+=("--script-security" "2")
 fi
 
 # Docker secret that contains the credentials for accessing the VPN.
@@ -71,4 +68,4 @@ trap cleanup TERM
 
 # DO NOT BACKGROUND. se --detach if you dont want it in foreground
 # cleanup: what are we doing with cleanup?
-_run openvpn "${openvpn_args[@]}" ${1:+"${@-}"}
+_run openvpn "${openvpn_args[@]}" "${1:+${@}}"
